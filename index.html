@@ -158,6 +158,161 @@
 
         //END//
 
+
+
+        //START//DOWNLOAD EXCEL DOUBLE TABLE
+
+        /* eslint-disable no-irregular-whitespace */
+        import { Workbook } from 'exceljs';
+        import FileSaver from 'file-saver';
+        
+        const DownloadExcelDoubleTable = ({
+            headersDataArr,
+            bodyDataArr,
+            firstTableName,
+            secondTableName,
+            worksheetName,
+            fileSaverName,
+            firstTableMergeStart,
+            firstTableMergeEnd,
+            secondTableMergeStart,
+            SecondTableMergeEnd,
+            headerBackgroundColor = '000099',
+            headerBorderTopColor = '000000',
+            headerBorderLeftColor = '000000',
+            headerBorderBottomColor = '000000',
+            headerBorderRightColor = '000000',
+            headerFontColor = 'ffffff',
+            headerFontSize = 12
+        }) => {
+            const workbook = new Workbook();
+            const worksheet = workbook.addWorksheet(worksheetName);
+        
+            worksheet.columns = headersDataArr;
+        
+            worksheet.insertRow(1); // we insert the top(note:this is not first row)
+            worksheet.getCell(firstTableMergeStart).value = firstTableName;
+            worksheet.getCell(secondTableMergeStart).value = secondTableName;
+            worksheet.mergeCells([`${firstTableMergeStart}:${firstTableMergeEnd}`]);
+            worksheet.mergeCells([`${secondTableMergeStart}:${SecondTableMergeEnd}`]);
+        
+            // THIS FOR LOOP FOR FIRST TWO ROW CSS CELL STYLING
+            // eslint-disable-next-line no-plusplus
+            for (let i = 1; i <= 2; i++) {
+                const sheetTitle = worksheet.getRow(i); // this is for
+                sheetTitle.eachCell(item => {
+                    // the if condition is doesn't consider empty column in excel sheet
+                    if (String(item._value.model.value).length !== 0 && item._value.model.value !== undefined) {
+                        item.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: headerBackgroundColor }
+                        };
+                        item.border = {
+                            top: { style: 'medium', color: { argb: headerBorderTopColor } },
+                            left: { style: 'medium', color: { argb: headerBorderLeftColor } },
+                            bottom: { style: 'medium', color: { argb: headerBorderBottomColor } },
+                            right: { style: 'medium', color: { argb: headerBorderRightColor } }
+                        };
+                        item.font = { color: { argb: headerFontColor }, size: headerFontSize, bold: true };
+                        item.alignment = { vertical: 'center', horizontal: 'center' };
+                    }
+                });
+            }
+        
+            // THIS IS BODY DATA
+            bodyDataArr.forEach(item => {
+                worksheet.addRow(item).alignment = {
+                    vertical: 'center',
+                    horizontal: 'left'
+                };
+            });
+            // this is for donwnload
+            workbook.xlsx.writeBuffer().then(buffer => {
+                const blob = new Blob([buffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+                });
+                FileSaver.saveAs(blob, fileSaverName);
+            });
+        };
+        
+        export default DownloadExcelDoubleTable;
+        
+
+
+        //METHOD CALLED BELOW
+
+
+        const handleDownloadTankTemplate = useCallback(async () => {
+    
+            const tankSequenceTemplateHeadersDataArr = [
+                {
+                    header: 'TankCategory',
+                    key: 'stankcategory',
+                    width: 15
+                },
+                { header: 'TankName', key: 'stankname', width: 32 },
+                {
+                    header: 'UtilizationRatio',
+                    key: 'maxper',
+                    width: 18
+                },
+                { header: 'Priority', key: 'priority', width: 10 }
+            ];
+            const tanktemplateHeadersDataArr = [
+                { header: 'Tank Category', key: 'stankcategory', width: '15' }, // A1 IN EXCEL SHEET
+                { header: 'Tank Name', key: 'stankname', width: '30' }, // B1 IN EXCEL SHEET
+                { header: 'Weight', key: 'dweight', width: '15' }, // C1 IN EXCEL SHEET
+                {}, // D1 IN EXCEL SHEET(this is empty column)
+                { header: 'Tank Category', key: '', width: '15' }, // E1 IN EXCEL SHEET
+                { header: 'Tank Name', key: '', width: '20' }, // F1 IN EXCEL SHEET
+                { header: 'Weight', key: '', width: '15' }, // G1 IN EXCEL SHEET
+                { header: 'Port', key: '', width: '15' } // H1 IN EXCEL SHEET
+            ];
+            // FROM A1 TO D1 FIRST TABLE;
+            // FROM F1 TO I1 SECOND TABLE;
+            const tanktemplateFirstTableMergeStart = 'A1';
+            const tanktemplateFirstTableMergeEnd = 'C1';
+            const tanktemplateSecondTableMergeStart = 'E1';
+            const tanktemplateSecondTableMergeEnd = 'H1';
+    
+            const tanksequencetemplate = await axios.get(`${BASE_URL}//tankdetail/${vesselCode.split('-')[0]}`);
+            const tankSequenceTemplateBodyDataArr = tanksequencetemplate.data;
+            const tankTemplateBodyDataArr = tanksequencetemplate.data;
+    
+            const tankSequenceWorksheetName = 'Tank Sequnce Template';
+            const tankSequenceFileSaverName = 'Tank Sequence Template.xlsx';
+            const tanktemplateFirstTableName = 'Tank Condition';
+            const tanktemplateSecondTableName = 'Bunker Condition';
+            const tanktemplateWorksheetName = 'Tank Template';
+            const tanktemplateFileSaverName = 'Tank Template.xlsx';
+    
+            const tankSequenceTemplateArgObj = {
+                headersDataArr: tankSequenceTemplateHeadersDataArr,
+                bodyDataArr: tankSequenceTemplateBodyDataArr,
+                worksheetName: tankSequenceWorksheetName,
+                fileSaverName: tankSequenceFileSaverName
+            };
+            DownloadExcelSingleTable(tankSequenceTemplateArgObj);
+    
+            const tanktemplateArgObj = {
+                headersDataArr: tanktemplateHeadersDataArr,
+                bodyDataArr: tankTemplateBodyDataArr,
+                firstTableName: tanktemplateFirstTableName,
+                secondTableName: tanktemplateSecondTableName,
+                worksheetName: tanktemplateWorksheetName,
+                fileSaverName: tanktemplateFileSaverName,
+                firstTableMergeStart: tanktemplateFirstTableMergeStart,
+                firstTableMergeEnd: tanktemplateFirstTableMergeEnd,
+                secondTableMergeStart: tanktemplateSecondTableMergeStart,
+                SecondTableMergeEnd: tanktemplateSecondTableMergeEnd
+            };
+            DownloadExcelDoubleTable(tanktemplateArgObj);
+    
+
+        }, [selected?.vesselName]);
+        //END
+
     </sript>
 </body>
 
