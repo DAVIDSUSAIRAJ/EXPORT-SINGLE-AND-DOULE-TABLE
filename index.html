@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+
+    <sript>
+        //START//THIS IS FOR SINGLE TABLE(EXCEL SHSEET)
+
+        import { Workbook } from 'exceljs';
+        import FileSaver from 'file-saver';
+
+        const DownloadExcelSingleTable = ({
+        headersDataArr,
+        bodyDataArr,
+        worksheetName,
+        fileSaverName,
+        headerBackgroundColor = '000099',
+        headerBorderTopColor = '000000',
+        headerBorderLeftColor = '000000',
+        headerBorderBottomColor = '000000',
+        headerBorderRightColor = '000000',
+        headerFontColor = 'ffffff',
+        headerFontSize = 12
+        }) => {
+        const workbook = new Workbook();
+
+        // START// THIS IS FOR SHEET(FOR SINGLE SHEET)
+        const worksheet = workbook.addWorksheet(worksheetName);
+        // END//
+
+        worksheet.columns = headersDataArr; // this is for headers data only
+        // START// THIS IS FOR HEADER STYLING(EVERY HEADER CELL)
+        const headerStyling = worksheet.getRow(1);
+
+        headerStyling.eachCell(item => {
+        item.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: headerBackgroundColor }
+        };
+        item.border = {
+        top: { style: 'thin', color: { argb: headerBorderTopColor } },
+        left: { style: 'thin', color: { argb: headerBorderLeftColor } },
+        bottom: { style: 'thin', color: { argb: headerBorderBottomColor } },
+        right: { style: 'thin', color: { argb: headerBorderRightColor } }
+        };
+        item.font = {
+        color: { argb: headerFontColor },
+        size: headerFontSize,
+        bold: true
+        };
+        item.alignment = {
+        vertical: 'center',
+        horizontal: 'center'
+        };
+        });
+        // END//
+        // START// THIS IS FOR BODY DATA(EVERY BODY CELL)
+        bodyDataArr.forEach(obj => {
+        worksheet.addRow(obj).alignment = {
+        vertical: 'left',
+        horizontal: 'left'
+        };
+        });
+        // END//
+        // START// THIS IS FOR FILE DOWNLOAD IN LOCAL
+        workbook.xlsx.writeBuffer().then(buffer => {
+        const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+        });
+        FileSaver.saveAs(blob, fileSaverName); // download as excel
+        });
+        // END
+        };
+
+        export default DownloadExcelSingleTable;
+
+
+
+
+        //FUCNTION CALLED BELOW
+        //downloadTemplate is a onclick method
+        const downloadTemplate = async () => {
+        if (!vesselCode) return;
+        const tankSequenceTemplateHeadersDataArr = [
+        {
+        header: 'TankCategory',
+        key: 'stankcategory',
+        width: 15
+        },
+        { header: 'TankName', key: 'stankname', width: 32 },
+        {
+        header: 'UtilizationRatio',
+        key: 'maxper',
+        width: 18
+        },
+        { header: 'Priority', key: 'priority', width: 10 }
+        ];
+        const tanktemplateHeadersDataArr = [
+        { header: 'Tank Category', key: 'stankcategory', width: '15' }, // A1 IN EXCEL SHEET
+        { header: 'Tank Name', key: 'stankname', width: '30' }, // B1 IN EXCEL SHEET
+        { header: 'Weight', key: 'dweight', width: '15' }, // C1 IN EXCEL SHEET
+        {}, // D1 IN EXCEL SHEET(this is empty column)
+        { header: 'Tank Category', key: '', width: '15' }, // E1 IN EXCEL SHEET
+        { header: 'Tank Name', key: '', width: '20' }, // F1 IN EXCEL SHEET
+        { header: 'Weight', key: '', width: '15' }, // G1 IN EXCEL SHEET
+        { header: 'Port', key: '', width: '15' } // H1 IN EXCEL SHEET
+        ];
+        // FROM A1 TO D1 FIRST TABLE;
+        // FROM F1 TO I1 SECOND TABLE;
+        const tanktemplateFirstTableMergeStart = 'A1';
+        const tanktemplateFirstTableMergeEnd = 'C1';
+        const tanktemplateSecondTableMergeStart = 'E1';
+        const tanktemplateSecondTableMergeEnd = 'H1';
+
+        const tanksequencetemplate = await axios.get(`${BASE_URL}//tankdetail/${vesselCode.split('-')[0]}`);
+        const tankSequenceTemplateBodyDataArr = tanksequencetemplate.data;
+        const tankTemplateBodyDataArr = tanksequencetemplate.data;
+
+        const tankSequenceWorksheetName = 'Tank Sequnce Template';
+        const tankSequenceFileSaverName = 'Tank Sequence Template.xlsx';
+        const tanktemplateFirstTableName = 'Tank Condition';
+        const tanktemplateSecondTableName = 'Bunker Condition';
+        const tanktemplateWorksheetName = 'Tank Template';
+        const tanktemplateFileSaverName = 'Tank Template.xlsx';
+
+        const tankSequenceTemplateArgObj = {
+        headersDataArr: tankSequenceTemplateHeadersDataArr,
+        bodyDataArr: tankSequenceTemplateBodyDataArr,
+        worksheetName: tankSequenceWorksheetName,
+        fileSaverName: tankSequenceFileSaverName
+        };
+        DownloadExcelSingleTable(tankSequenceTemplateArgObj);
+
+        const tanktemplateArgObj = {
+        headersDataArr: tanktemplateHeadersDataArr,
+        bodyDataArr: tankTemplateBodyDataArr,
+        firstTableName: tanktemplateFirstTableName,
+        secondTableName: tanktemplateSecondTableName,
+        worksheetName: tanktemplateWorksheetName,
+        fileSaverName: tanktemplateFileSaverName,
+        firstTableMergeStart: tanktemplateFirstTableMergeStart,
+        firstTableMergeEnd: tanktemplateFirstTableMergeEnd,
+        secondTableMergeStart: tanktemplateSecondTableMergeStart,
+        SecondTableMergeEnd: tanktemplateSecondTableMergeEnd
+        };
+        DownloadExcelDoubleTable(tanktemplateArgObj);
+        };
+
+        //END//
+
+    </sript>
+</body>
+
+</html>
