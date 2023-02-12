@@ -313,6 +313,18 @@
         }, [selected?.vesselName]);
         //END
 
+
+
+        //ISO FORMATE TO DATE FORMATE
+
+
+        const fromISOForamttoDate = (isodate) =>{
+            const date = new Date(isodate);
+            const options = { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' };
+            const formattedDate = date.toLocaleDateString('en-GB',options).split(",").join("");
+            return formattedDate;
+           }
+           fromISOForamttoDate("2011-10-05T14:48:00.000Z")
     </sript>
 </body>
 
